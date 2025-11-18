@@ -8,6 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "matrix-nio[e2ee]>=0.25.2",
     "nestor",
 ]
 
