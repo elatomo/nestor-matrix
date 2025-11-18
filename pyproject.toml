@@ -1,0 +1,22 @@
+[project]
+name = "nestor-matrix"
+version = "0.1.0"
+description = "Matrix bot integration for Néstor AI assistant."
+authors = [
+    { name = "José Fernández Ramos", email = "jose@navika.io" }
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "nestor",
+]
+
+[dependency-groups]
+dev = [
+]
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+nestor = { git = "https://github.com/elatomo/nestor" }
