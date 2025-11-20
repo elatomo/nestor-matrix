@@ -738,6 +738,7 @@ name = "nestor-matrix"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "matrix-nio" },
     { name = "nestor" },
     { name = "pydantic-settings" },
@@ -751,6 +752,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "matrix-nio", extras = ["e2ee"], specifier = ">=0.25.2" },
     { name = "nestor", git = "https://github.com/elatomo/nestor" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
