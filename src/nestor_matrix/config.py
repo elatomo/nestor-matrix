@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     homeserver_url: str
     user_id: str
     access_token: SecretStr
+    device_id: str
 
 
 # Global settings instance

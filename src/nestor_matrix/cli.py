@@ -28,7 +28,7 @@ def login(homeserver: str, username: str, password: str):
 
     async def _login():
         try:
-            token, _ = await get_access_token(homeserver, username, password)
+            token, device_id = await get_access_token(homeserver, username, password)
             click.echo("\n✓ Login successful!\n")
             click.echo("Add these to your .env file:\n")
             click.secho(f"HOMESERVER_URL={homeserver}", fg="green")
@@ -37,6 +37,7 @@ def login(homeserver: str, username: str, password: str):
                 fg="green",
             )
             click.secho(f"ACCESS_TOKEN={token}", fg="green")
+            click.secho(f"DEVICE_ID={device_id}", fg="green")
         except Exception as e:
             click.secho(f"✗ Login failed: {e}", fg="red", err=True)
             sys.exit(1)
@@ -52,6 +53,7 @@ def info():
     click.echo("Néstor Matrix Configuration:")
     click.echo(f"  Homeserver: {settings.homeserver_url}")
     click.echo(f"  User ID: {settings.user_id}")
+    click.echo(f"  Device ID: {settings.device_id}")
 
 
 if __name__ == "__main__":
