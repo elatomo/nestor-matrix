@@ -70,6 +70,13 @@ coverage: ensure-uv  ## Check test coverage
 	uv run pytest --cov=src --cov-report=term-missing tests/
 
 
+# Composite Checks
+# ----------------
+
+.PHONY: check
+check: typecheck lint test  ## Run all checks
+
+
 # Build & Release
 # ---------------
 
