@@ -46,6 +46,18 @@ def login(homeserver: str, username: str, password: str):
 
 
 @cli.command()
+def generate_pickle_key():
+    """Generate crypto database encryption key.
+
+    Generate a fresh symmetric encryption key to encrypt your bot's crypto keys
+    at rest in the database.
+    """
+    import secrets
+
+    click.echo(secrets.token_urlsafe(32))
+
+
+@cli.command()
 def info():
     """Show bot configuration."""
     from .config import settings
