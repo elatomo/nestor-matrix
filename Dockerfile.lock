@@ -1,0 +1,34 @@
+# Lock file generator for nestor-matrix
+#
+# Purpose:
+#   Generate uv.lock using Python 3.14 where python-olm has precompiled wheels.
+#   Uses Debian's older CMake which accepts the bundled libolm CMakeLists.txt.
+#
+# Usage:
+#   docker build -t nestor-lock -f Dockerfile.lock .
+#   docker run --rm -v $(pwd):/workspace nestor-lock
+#   sudo chown $(id -u):$(id -g) uv.lock
+
+FROM python:3.14-slim
+
+# Install system dependencies required for building/installing dependencies
+# - curl: Download uv installer
+# - libolm-dev: Cryptography library for Matrix E2EE
+# - cmake, build-essential: Build tools for native extensions
+RUN apt-get update && \
+    apt-get install -y \
+        git \
+        curl \
+        libolm-dev \
+        cmake \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+
+WORKDIR /workspace
+
+# Default command: generate lock
+CMD ["uv", "lock"]
