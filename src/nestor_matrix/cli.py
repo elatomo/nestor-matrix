@@ -16,7 +16,7 @@ def cli(debug: bool):
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
 
 
-@cli.command()
+@cli.command
 @click.option("--homeserver", "-H", prompt=True, help="Homeserver domain or URL")
 @click.option(
     "--username", "-u", prompt=True, help="Username (@user:domain or localpart)"
@@ -45,7 +45,7 @@ def login(homeserver: str, username: str, password: str):
     asyncio.run(_login())
 
 
-@cli.command()
+@cli.command
 def generate_pickle_key():
     """Generate crypto database encryption key.
 
@@ -57,7 +57,7 @@ def generate_pickle_key():
     click.echo(secrets.token_urlsafe(32))
 
 
-@cli.command()
+@cli.command
 def info():
     """Show bot configuration."""
     from .config import settings
