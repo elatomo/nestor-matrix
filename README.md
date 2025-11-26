@@ -26,21 +26,3 @@ uv python install
 # Install dependencies
 uv sync
 ```
-
-### If python-olm fails to install
-
-If you get a CMake-related error during installation:
-
-```bash
-sh scripts/install-python-olm.sh
-uv sync --no-install-package python-olm
-```
-
-This happens when your CMake version is incompatible with the bundled libolm
-build configuration. The script patches it for compatibility.
-
-> [!NOTE]
-> If you're affected by this issue and need to modify dependencies, use
-> `sh scripts/generate-lock.sh` to regenerate the lock file. This script uses
-> Docker with a compatible CMake version to ensure the lock can be generated
-> successfully.
