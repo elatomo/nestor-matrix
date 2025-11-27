@@ -45,6 +45,42 @@ def login(homeserver: str, username: str, password: str):
     asyncio.run(_login())
 
 
+@cli.command()
+@click.confirmation_option(
+    prompt="⚠ This will log out your current device and invalidate your access token. Continue?"
+)
+def logout():
+    """Log out from current device and invalidate access token.
+
+    This deletes the device and its encryption keys from the homeserver.
+    """
+    from mautrix.client import Client
+
+    from .config import settings
+
+    async def _logout():
+        client = None
+        try:
+            client = Client(
+                mxid=settings.user_id,
+                base_url=settings.homeserver_url,
+                token=settings.access_token.get_secret_value(),
+                device_id=settings.device_id,
+            )
+            await client.logout()
+
+            click.secho(f"✓ Logged out from device '{settings.device_id}'", fg="green")
+        except Exception as e:
+            click.secho(f"✗ Failed: {e}", fg="red", err=True)
+            sys.exit(1)
+        finally:
+            if client:
+                client.stop()
+                await client.api.session.close()
+
+    asyncio.run(_logout())
+
+
 @cli.command
 def generate_pickle_key():
     """Generate crypto database encryption key.
