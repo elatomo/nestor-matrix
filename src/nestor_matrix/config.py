@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     device_id: str
 
     # E2EE settings
+    database_url: str = "sqlite:nestor.db"
     pickle_key: SecretStr
 
 

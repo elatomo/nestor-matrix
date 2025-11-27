@@ -14,3 +14,8 @@ wheels/
 
 # Test artifacts
 .coverage
+
+# Néstor databases
+*.db
+*.db-shm
+*.db-wal
