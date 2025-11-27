@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     access_token: SecretStr
     device_id: str
 
+    # E2EE settings
+    pickle_key: SecretStr
+
 
 # Global settings instance
 settings = Settings()  # type: ignore[call-arg]
