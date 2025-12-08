@@ -32,8 +32,8 @@ clean:  ## Remove all build artifacts
 # ---------------------
 
 .PHONY: run
-run: ensure-uv  ## Run the CLI (usage: make run ARGS="your query")
-	uv run nestor-matrix $(ARGS)
+run: ensure-uv  ## Run the bot (or custom command: make run ARGS="login")
+	uv run nestor-matrix $(or $(ARGS),run)
 
 .PHONY: shell
 shell: ensure-uv  ## Start Python REPL with project environment
