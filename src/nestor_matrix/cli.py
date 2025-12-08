@@ -17,6 +17,19 @@ def cli(debug: bool):
 
 
 @cli.command
+def run():
+    """Start the Matrix bot."""
+    from .bot import main
+
+    logger.info("Starting Néstor Matrix bot")
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Bot stopped")
+        sys.exit(0)
+
+
+@cli.command
 @click.option("--homeserver", "-H", prompt=True, help="Homeserver domain or URL")
 @click.option(
     "--username", "-u", prompt=True, help="Username (@user:domain or localpart)"
