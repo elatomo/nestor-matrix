@@ -147,5 +147,6 @@ class EchoBot:
 
 
 async def main():
+    """Create and start the bot."""
     bot = EchoBot()
     await bot.start()
