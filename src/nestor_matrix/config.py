@@ -3,7 +3,7 @@
 Loads settings from environment variables and .env file.
 """
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     # E2EE settings
     database_url: str = "sqlite:nestor.db"
     pickle_key: SecretStr
+
+    # Sync behavior
+    ignore_initial_sync: bool = Field(
+        default=True, description="Ignore room history when first joining"
+    )
+    ignore_first_sync: bool = Field(
+        default=False, description="Ignore events that happened during downtime"
+    )
 
 
 # Global settings instance

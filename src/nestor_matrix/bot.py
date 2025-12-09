@@ -50,10 +50,8 @@ class EchoBot:
 
         self.user_id = settings.user_id
 
-        # Ignore events from the initial sync
-        self.client.ignore_initial_sync = True
-        # Ignore events that were sent while the bot was down
-        self.client.ignore_first_sync = True
+        self.client.ignore_initial_sync = settings.ignore_initial_sync
+        self.client.ignore_first_sync = settings.ignore_first_sync
 
         # Register handlers
         self.client.add_event_handler(EventType.ROOM_MEMBER, self.handle_invite)
