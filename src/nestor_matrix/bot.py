@@ -19,6 +19,31 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 
+def _is_mentioned(body: str, user_id: str) -> bool:
+    """Check if bot is mentioned in message."""
+    return body.startswith(("!nestor", "!n", user_id))
+
+
+def _should_ignore_message(event: MessageEvent, bot_user_id: str) -> bool:
+    """Check if message should be ignored."""
+    return (
+        # Ignore our own messages
+        event.sender == bot_user_id
+        # Ignore replies to other messages
+        or bool(event.content.relates_to)
+    )
+
+
+def _create_echo_response(body: str) -> TextMessageEventContent:
+    """Create echo response from message body."""
+    # Strip mention prefix
+    text = body.split(maxsplit=1)[1] if " " in body else ""
+    return TextMessageEventContent(
+        msgtype=MessageType.NOTICE,
+        body=text or "Hi! Mention me with a message.",
+    )
+
+
 class EchoBot:
     """Simple echo bot with E2EE support."""
 
@@ -103,37 +128,16 @@ class EchoBot:
             event.content.body,
         )
 
-        # Ignore our own messages
-        if event.sender == self.user_id:
+        if _should_ignore_message(event, self.user_id):
             return
 
-        # Ignore replies to other messages
-        if event.content.relates_to:
-            return
-
-        # # Only respond to mentions
-        body = event.content.body
-        if not self._is_mentioned(body):
+        if not _is_mentioned(event.content.body, self.user_id):
             return
 
         # Echo message
-        response = self._create_response(body)
+        response = _create_echo_response(event.content.body)
         await self.client.send_message_event(
             event.room_id, EventType.ROOM_MESSAGE, response
-        )
-
-    def _is_mentioned(self, body: str) -> bool:
-        """Check if bot is mentioned."""
-        return body.startswith(("!nestor", settings.user_id))
-
-    def _create_response(self, body: str) -> TextMessageEventContent:
-        """Create echo response."""
-        # Strip mention prefix
-        text = body.split(maxsplit=1)[1] if " " in body else ""
-
-        return TextMessageEventContent(
-            msgtype=MessageType.NOTICE,
-            body=text or "Hi! Mention me with a message.",
         )
 
     async def _cleanup(self) -> None:
