@@ -54,8 +54,8 @@ class EchoBot:
         self.client.ignore_first_sync = settings.ignore_first_sync
 
         # Register handlers
-        self.client.add_event_handler(EventType.ROOM_MEMBER, self.handle_invite)
-        self.client.add_event_handler(EventType.ROOM_MESSAGE, self.handle_message)
+        self.client.add_event_handler(EventType.ROOM_MEMBER, self._handle_invite)
+        self.client.add_event_handler(EventType.ROOM_MESSAGE, self._handle_message)
 
     async def start(self):
         """Start the bot."""
@@ -85,7 +85,7 @@ class EchoBot:
         finally:
             await self._cleanup()
 
-    async def handle_invite(self, event: StrippedStateEvent) -> None:
+    async def _handle_invite(self, event: StrippedStateEvent) -> None:
         """Auto-join invited rooms."""
         # Ignore the message if it's not an invitation for us.
         if (
@@ -95,7 +95,7 @@ class EchoBot:
             await self.client.join_room(event.room_id)
             logger.info("Joined room %s", event.room_id)
 
-    async def handle_message(self, event: MessageEvent) -> None:
+    async def _handle_message(self, event: MessageEvent) -> None:
         logger.debug(
             "Message from %s in %s: %r",
             event.sender,
