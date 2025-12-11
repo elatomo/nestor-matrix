@@ -13,6 +13,7 @@ from mautrix.types import (
     TextMessageEventContent,
 )
 from mautrix.util.async_db import Database
+from nestor import AssistantDeps, create_assistant_agent
 
 from .config import settings
 
@@ -34,18 +35,13 @@ def _should_ignore_message(event: MessageEvent, bot_user_id: str) -> bool:
     )
 
 
-def _create_echo_response(body: str) -> TextMessageEventContent:
-    """Create echo response from message body."""
-    # Strip mention prefix
-    text = body.split(maxsplit=1)[1] if " " in body else ""
-    return TextMessageEventContent(
-        msgtype=MessageType.NOTICE,
-        body=text or "Hi! Mention me with a message.",
-    )
+def _extract_prompt(body: str) -> str:
+    """Extract prompt from message, removing mention prefix."""
+    return body.split(maxsplit=1)[1] if " " in body else ""
 
 
-class EchoBot:
-    """Simple echo bot with E2EE support."""
+class NestorBot:
+    """Néstor AI assistant bot with E2EE support."""
 
     def __init__(self):
         # Database for crypto + state
@@ -77,6 +73,16 @@ class EchoBot:
 
         self.client.ignore_initial_sync = settings.ignore_initial_sync
         self.client.ignore_first_sync = settings.ignore_first_sync
+
+        # Néstor agent
+        self.agent = create_assistant_agent(
+            api_key=settings.nestor_openai_api_key,
+            model_name=settings.nestor_default_model,
+        )
+        self.agent_deps = AssistantDeps(
+            search_backend=settings.nestor_search_backend,
+            safesearch=settings.nestor_safesearch,
+        )
 
         # Register handlers
         self.client.add_event_handler(EventType.ROOM_MEMBER, self._handle_invite)
@@ -134,11 +140,32 @@ class EchoBot:
         if not _is_mentioned(event.content.body, self.user_id):
             return
 
-        # Echo message
-        response = _create_echo_response(event.content.body)
-        await self.client.send_message_event(
-            event.room_id, EventType.ROOM_MESSAGE, response
+        # Get Néstor response
+        prompt = _extract_prompt(event.content.body)
+        if not prompt:
+            await self._send_response(
+                event.room_id,
+                "Hi! Mention me with a message.",
+            )
+            return
+
+        try:
+            result = await self.agent.run(prompt, deps=self.agent_deps)
+            await self._send_response(event.room_id, result.output)
+        except Exception:
+            logger.exception("Failed to get AI response")
+            await self._send_response(
+                event.room_id,
+                "Sorry, I encountered an error processing your request.",
+            )
+
+    async def _send_response(self, room_id: str, text: str) -> None:
+        """Send a text response to a room."""
+        content = TextMessageEventContent(
+            msgtype=MessageType.NOTICE,
+            body=text,
         )
+        await self.client.send_message_event(room_id, EventType.ROOM_MESSAGE, content)
 
     async def _cleanup(self) -> None:
         """Cleanup resources."""
@@ -152,5 +179,5 @@ class EchoBot:
 
 async def main():
     """Create and start the bot."""
-    bot = EchoBot()
+    bot = NestorBot()
     await bot.start()

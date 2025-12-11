@@ -768,7 +768,7 @@ wheels = [
 [[package]]
 name = "nestor"
 version = "0.1.0"
-source = { git = "https://github.com/elatomo/nestor#4f01f0195eda32e109c92305af0d8107cb7d02b8" }
+source = { git = "https://github.com/elatomo/nestor#4ace1f24b6ba3ad7a552e86a8ef1f8a1e0bbd2b8" }
 dependencies = [
     { name = "click" },
     { name = "ddgs" },
