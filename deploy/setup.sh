@@ -176,12 +176,19 @@ Next steps:
    sudo -u $APP_USER vi $APP_DIR/repo/.env
 
 2. Required values:
-   - HOMESERVER_URL: Your Matrix server, e.g., https://matrix.example.com
-   - USER_ID: Bot's Matrix ID, e.g., @nestor:example.com
-   - ACCESS_TOKEN: From: sudo -u $APP_USER uv run nestor-matrix login
-   - DEVICE_ID: From login command above
-   - PICKLE_KEY: From: sudo -u $APP_USER uv run nestor-matrix generate-pickle-key
-   - NESTOR_OPENAI_API_KEY
+   - HOMESERVER_URL: Your Matrix server (e.g., https://matrix.example.com)
+   - USER_ID: Bot's Matrix ID (e.g., @nestor:example.com)
+   - ACCESS_TOKEN: Get via login command (see below)
+   - DEVICE_ID: Get via login command (see below)
+   - PICKLE_KEY: Get via generate command (see below)
+   - NESTOR_OPENAI_API_KEY: Your OpenAI API key
+
+   Helper commands (run as $APP_USER):
+
+   sudo -i -u $APP_USER
+   cd $APP_DIR/repo
+   ~/.local/bin/uv run nestor-matrix login
+   ~/.local/bin/uv run nestor-matrix generate-pickle-key
 
 3. Start the service:
 
