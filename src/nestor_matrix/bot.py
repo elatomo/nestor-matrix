@@ -6,12 +6,14 @@ from mautrix.client import Client
 from mautrix.crypto import OlmMachine, PgCryptoStateStore, PgCryptoStore
 from mautrix.types import (
     EventType,
+    Format,
     Membership,
     MessageEvent,
     MessageType,
     StrippedStateEvent,
     TextMessageEventContent,
 )
+from mautrix.util import markdown
 from mautrix.util.async_db import Database
 from nestor import AssistantDeps, create_assistant_agent
 
@@ -160,10 +162,12 @@ class NestorBot:
             )
 
     async def _send_response(self, room_id: str, text: str) -> None:
-        """Send a text response to a room."""
+        """Send a markdown-formatted notice to a room."""
         content = TextMessageEventContent(
             msgtype=MessageType.NOTICE,
+            format=Format.HTML,
             body=text,
+            formatted_body=markdown.render(text),
         )
         await self.client.send_message_event(room_id, EventType.ROOM_MESSAGE, content)
 
