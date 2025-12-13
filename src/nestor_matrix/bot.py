@@ -2,6 +2,7 @@
 
 import logging
 
+from markdown_it import MarkdownIt
 from mautrix.client import Client
 from mautrix.crypto import OlmMachine, PgCryptoStateStore, PgCryptoStore
 from mautrix.types import (
@@ -13,13 +14,14 @@ from mautrix.types import (
     StrippedStateEvent,
     TextMessageEventContent,
 )
-from mautrix.util import markdown
 from mautrix.util.async_db import Database
 from nestor import AssistantDeps, create_assistant_agent
 
 from .config import settings
 
 logger = logging.getLogger(__name__)
+
+markdown = MarkdownIt()
 
 
 def _is_mentioned(body: str, user_id: str) -> bool:
