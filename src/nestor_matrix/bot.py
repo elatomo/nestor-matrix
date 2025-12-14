@@ -153,16 +153,16 @@ class NestorBot:
             )
             return
 
+        await self.client.set_typing(event.room_id, timeout=30_000)
+        reply = "Sorry, I encountered an error processing your request."
         try:
-            await self.client.set_typing(event.room_id, timeout=30_000)
             result = await self.agent.run(prompt, deps=self.agent_deps)
-            await self._send_response(event.room_id, result.output)
+            reply = result.output
         except Exception:
             logger.exception("Failed to get AI response")
-            await self._send_response(
-                event.room_id,
-                "Sorry, I encountered an error processing your request.",
-            )
+        finally:
+            await self.client.set_typing(event.room_id, timeout=0)
+            await self._send_response(event.room_id, reply)
 
     async def _send_response(self, room_id: str, text: str) -> None:
         """Send a markdown-formatted notice to a room."""
