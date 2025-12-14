@@ -154,6 +154,7 @@ class NestorBot:
             return
 
         try:
+            await self.client.set_typing(event.room_id, timeout=30_000)
             result = await self.agent.run(prompt, deps=self.agent_deps)
             await self._send_response(event.room_id, result.output)
         except Exception:
