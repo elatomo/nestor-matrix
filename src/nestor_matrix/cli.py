@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import pathlib
 import sys
 
 import click
@@ -104,6 +105,48 @@ def generate_pickle_key():
     import secrets
 
     click.echo(secrets.token_urlsafe(32))
+
+
+@cli.command()
+@click.option("--displayname", "-n", default="Néstor", help="Bot display name")
+@click.option(
+    "--avatar",
+    "-a",
+    type=click.Path(exists=True, path_type=pathlib.Path),
+    help="Avatar image path",
+)
+def setup_profile(displayname: str, avatar: pathlib.Path | None):
+    """Set bot display name and avatar."""
+    import mimetypes
+
+    from mautrix.client import Client
+
+    from .config import settings
+
+    async def _setup():
+        client = Client(
+            mxid=settings.user_id,
+            base_url=settings.homeserver_url,
+            token=settings.access_token.get_secret_value(),
+            device_id=settings.device_id,
+        )
+        try:
+            await client.set_displayname(displayname)
+            click.echo(f"✓ Display name set to '{displayname}'")
+
+            if avatar:
+                mime_type, _ = mimetypes.guess_type(avatar)
+                mxc_uri = await client.upload_media(
+                    avatar.read_bytes(),
+                    mime_type=mime_type,
+                    filename=avatar.name,
+                )
+                await client.set_avatar_url(mxc_uri, check_current=False)
+                click.echo(f"✓ Avatar uploaded: {mxc_uri}")
+        finally:
+            await client.api.session.close()
+
+    asyncio.run(_setup())
 
 
 @cli.command
