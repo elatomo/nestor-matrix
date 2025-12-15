@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/elatomo/nestor/main/assets/avatar.png" alt="Néstor bot avatar" width="300">
+  <img src="https://raw.githubusercontent.com/elatomo/nestor-matrix/main/assets/avatar.png" alt="Néstor bot avatar" width="200">
   <p><em>Matrix bot for <a href="https://github.com/elatomo/nestor">Néstor</a>, a personal AI assistant 🎩💬</em></p>
 </div>
 
