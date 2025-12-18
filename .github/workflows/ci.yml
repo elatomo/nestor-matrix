@@ -27,7 +27,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             cd /opt/nestor-matrix/repo
-            git pull --ff-only origin main
+            git fetch origin main
+            git reset --hard origin/main
             ~/.local/bin/uv sync --frozen
             sudo systemctl restart nestor-matrix
