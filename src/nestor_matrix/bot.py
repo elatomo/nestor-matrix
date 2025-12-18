@@ -8,9 +8,12 @@ from mautrix.crypto import OlmMachine, PgCryptoStateStore, PgCryptoStore
 from mautrix.types import (
     EventType,
     Format,
+    InReplyTo,
     Membership,
     MessageEvent,
     MessageType,
+    RelatesTo,
+    RelationType,
     StrippedStateEvent,
     TextMessageEventContent,
 )
@@ -120,10 +123,6 @@ class NestorBot:
         if event.sender == self.user_id:
             return False
 
-        # Ignore replies to other messages
-        if bool(event.content.relates_to):
-            return False
-
         if await self._is_direct_message(event.room_id):
             return True
 
@@ -157,10 +156,7 @@ class NestorBot:
             else event.content.body
         )
         if not prompt:
-            await self._send_response(
-                event.room_id,
-                "Hi! Mention me with a message.",
-            )
+            await self._reply_in_thread(event, "Hi! Mention me with a message.")
             return
 
         await self.client.set_typing(event.room_id, timeout=30_000)
@@ -172,17 +168,25 @@ class NestorBot:
             logger.exception("Failed to get AI response")
         finally:
             await self.client.set_typing(event.room_id, timeout=0)
-            await self._send_response(event.room_id, reply)
+            await self._reply_in_thread(event, reply)
 
-    async def _send_response(self, room_id: str, text: str) -> None:
-        """Send a markdown-formatted notice to a room."""
+    async def _reply_in_thread(self, event: MessageEvent, text: str) -> None:
+        """Reply to an event, rendering text as Markdown."""
         content = TextMessageEventContent(
             msgtype=MessageType.NOTICE,
             format=Format.HTML,
             body=text,
             formatted_body=markdown.render(text),
+            relates_to=RelatesTo(
+                rel_type=RelationType.THREAD,
+                event_id=event.content.relates_to.event_id or event.event_id,
+                is_falling_back=True,
+                in_reply_to=InReplyTo(event_id=event.event_id),
+            ),
         )
-        await self.client.send_message_event(room_id, EventType.ROOM_MESSAGE, content)
+        await self.client.send_message_event(
+            event.room_id, EventType.ROOM_MESSAGE, content
+        )
 
     async def _cleanup(self) -> None:
         """Cleanup resources."""
