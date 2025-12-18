@@ -26,17 +26,7 @@ markdown = MarkdownIt()
 
 def _is_mentioned(body: str, user_id: str) -> bool:
     """Check if bot is mentioned in message."""
-    return body.startswith(("!nestor", "!n", user_id))
-
-
-def _should_ignore_message(event: MessageEvent, bot_user_id: str) -> bool:
-    """Check if message should be ignored."""
-    return (
-        # Ignore our own messages
-        event.sender == bot_user_id
-        # Ignore replies to other messages
-        or bool(event.content.relates_to)
-    )
+    return body.lower().startswith(("!nestor", "!n", user_id))
 
 
 def _extract_prompt(body: str) -> str:
@@ -120,6 +110,25 @@ class NestorBot:
         finally:
             await self._cleanup()
 
+    async def _is_direct_message(self, room_id: str) -> bool:
+        """Check if room is a DM (exactly 2 members)."""
+        return len(await self.client.get_joined_members(room_id)) == 2
+
+    async def _should_respond(self, event: MessageEvent) -> bool:
+        """Determine if bot should respond to this message."""
+        # Ignore our own messages
+        if event.sender == self.user_id:
+            return False
+
+        # Ignore replies to other messages
+        if bool(event.content.relates_to):
+            return False
+
+        if await self._is_direct_message(event.room_id):
+            return True
+
+        return _is_mentioned(event.content.body, self.user_id)
+
     async def _handle_invite(self, event: StrippedStateEvent) -> None:
         """Auto-join invited rooms."""
         # Ignore the message if it's not an invitation for us.
@@ -138,14 +147,15 @@ class NestorBot:
             event.content.body,
         )
 
-        if _should_ignore_message(event, self.user_id):
-            return
-
-        if not _is_mentioned(event.content.body, self.user_id):
+        if not await self._should_respond(event):
             return
 
         # Get Néstor response
-        prompt = _extract_prompt(event.content.body)
+        prompt = (
+            _extract_prompt(event.content.body)
+            if _is_mentioned(event.content.body, self.user_id)
+            else event.content.body
+        )
         if not prompt:
             await self._send_response(
                 event.room_id,
