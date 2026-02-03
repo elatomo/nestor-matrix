@@ -6,7 +6,7 @@ from markdown_it import MarkdownIt
 from mautrix.api import Method, Path
 from mautrix.client import Client
 from mautrix.crypto import OlmMachine, PgCryptoStateStore, PgCryptoStore
-from mautrix.errors import MatrixResponseError
+from mautrix.errors import DecryptionError, MatrixResponseError, SessionNotFound
 from mautrix.types import (
     Event,
     EventType,
@@ -254,6 +254,34 @@ class NestorBot:
         await self.client.send_message_event(
             event.room_id, EventType.ROOM_MESSAGE, content
         )
+
+    async def _get_thread_messages(
+        self, room_id: str, thread_root_id: str, limit: int = 10
+    ) -> list[MessageEvent]:
+        """Fetch and decrypt most recent messages from a thread (newest-first)."""
+        response = await _get_event_relations(
+            self.client,
+            room_id=room_id,
+            event_id=thread_root_id,
+            rel_type=RelationType.THREAD,
+            limit=limit,
+        )
+
+        events: list[MessageEvent] = []
+        for event in response.events:  # type: ignore
+            try:
+                decrypted = await self._decrypt_event_if_needed(event)
+                if isinstance(decrypted, MessageEvent):
+                    events.append(decrypted)
+            except SessionNotFound:
+                # Message from before we joined or different device
+                logger.debug(
+                    "Skipping event %s: missing decryption session", event.event_id
+                )
+            except DecryptionError as e:
+                logger.warning("Failed to decrypt event %s: %s", event.event_id, e)
+
+        return events
 
     async def _decrypt_event_if_needed(self, event: Event) -> Event:
         """Decrypt event if it's encrypted."""
