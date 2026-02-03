@@ -25,6 +25,13 @@ from mautrix.types import (
 )
 from mautrix.util.async_db import Database
 from nestor import AssistantDeps, create_assistant_agent
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelRequest,
+    ModelResponse,
+    TextPart,
+    UserPromptPart,
+)
 
 from .config import settings
 
@@ -226,10 +233,14 @@ class NestorBot:
             await self._reply_in_thread(event, "Hi! Mention me with a message.")
             return
 
+        # Build context from thread history
+        message_history = await self._build_thread_history(event)
         await self.client.set_typing(event.room_id, timeout=30_000)
         reply = "Sorry, I encountered an error processing your request."
         try:
-            result = await self.agent.run(prompt, deps=self.agent_deps)
+            result = await self.agent.run(
+                prompt, deps=self.agent_deps, message_history=message_history or None
+            )
             reply = result.output
         except Exception:
             logger.exception("Failed to get AI response")
@@ -288,6 +299,54 @@ class NestorBot:
         if event.type == EventType.ROOM_ENCRYPTED:
             return await self.client.crypto.decrypt_megolm_event(event)
         return event
+
+    def _thread_events_to_history(
+        self, events: list[MessageEvent]
+    ) -> list[ModelMessage]:
+        """Convert Matrix thread events to pydantic-ai message history."""
+        messages: list[ModelMessage] = []
+        for event in events:
+            body = event.content.body
+
+            if event.sender == self.user_id:
+                # Bot's own messages become assistant responses
+                messages.append(ModelResponse(parts=[TextPart(content=body)]))
+            else:
+                # Strip mention prefix from user messages
+                if _is_mentioned(body, self.user_id):
+                    body = _extract_prompt(body) or body
+                messages.append(ModelRequest(parts=[UserPromptPart(content=body)]))
+
+        return messages
+
+    async def _build_thread_history(
+        self, event: MessageEvent, limit: int = 10
+    ) -> list[ModelMessage]:
+        """Build message history from thread context.
+
+        Returns empty list if not in a thread or thread is empty.
+        """
+        thread_root_id = event.content.get_thread_parent()
+        if not thread_root_id:
+            return []
+
+        # Fetch thread root (the message that started the thread)
+        thread_events: list[MessageEvent] = []
+        try:
+            root_event = await self.client.get_event(event.room_id, thread_root_id)
+            root_decrypted = await self._decrypt_event_if_needed(root_event)
+            if isinstance(root_decrypted, MessageEvent):
+                thread_events.append(root_decrypted)
+        except Exception:
+            logger.warning("Failed to fetch thread root %s", thread_root_id)
+
+        # Fetch thread replies (excluding current event)
+        replies = await self._get_thread_messages(
+            event.room_id, thread_root_id, limit=limit
+        )
+        thread_events.extend(e for e in replies if e.event_id != event.event_id)
+
+        return self._thread_events_to_history(thread_events)
 
     async def _cleanup(self) -> None:
         """Cleanup resources."""
