@@ -50,3 +50,29 @@ make run
 Pushing to `main` triggers automatic deployment via GitHub Actions.
 
 Server setup uses the script in `deploy/setup.sh`.
+
+## Example Session
+
+Run `make shell`, and then:
+
+```python
+import logging
+import asyncio
+
+from nestor_matrix.bot import NestorBot
+
+logging.basicConfig(level=logging.INFO)
+
+bot = NestorBot()
+
+# Start the bot in the background
+task = asyncio.create_task(bot.start())
+
+# Now you can interact with the bot
+await bot.client.whoami()
+await bot.client.get_joined_rooms()
+members = await bot.client.get_members("!room:server.com")
+
+# When done, cancel the task
+task.cancel()
+```
