@@ -255,6 +255,12 @@ class NestorBot:
             event.room_id, EventType.ROOM_MESSAGE, content
         )
 
+    async def _decrypt_event_if_needed(self, event: Event) -> Event:
+        """Decrypt event if it's encrypted."""
+        if event.type == EventType.ROOM_ENCRYPTED:
+            return await self.client.crypto.decrypt_megolm_event(event)
+        return event
+
     async def _cleanup(self) -> None:
         """Cleanup resources."""
         logger.info("Cleaning up")
