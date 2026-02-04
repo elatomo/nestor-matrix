@@ -1,7 +1,7 @@
 [project]
 name = "nestor-matrix"
 version = "0.1.0"
-description = "Matrix bot integration for Néstor AI assistant."
+description = "Matrix bot for Néstor, a personal AI assistant."
 authors = [
     { name = "José Fernández Ramos", email = "jose@navika.io" }
 ]
