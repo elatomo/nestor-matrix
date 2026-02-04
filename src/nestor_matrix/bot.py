@@ -3,10 +3,9 @@
 import logging
 
 from markdown_it import MarkdownIt
-from mautrix.api import Method, Path
 from mautrix.client import Client
 from mautrix.crypto import OlmMachine, PgCryptoStateStore, PgCryptoStore
-from mautrix.errors import DecryptionError, MatrixResponseError, SessionNotFound
+from mautrix.errors import DecryptionError, SessionNotFound
 from mautrix.types import (
     Event,
     EventType,
@@ -15,11 +14,8 @@ from mautrix.types import (
     Membership,
     MessageEvent,
     MessageType,
-    PaginatedMessages,
-    PaginationDirection,
     RelatesTo,
     RelationType,
-    SerializerError,
     StrippedStateEvent,
     TextMessageEventContent,
 )
@@ -33,6 +29,7 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 
+from .compat import get_event_relations
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -48,67 +45,6 @@ def _is_mentioned(body: str, user_id: str) -> bool:
 def _extract_prompt(body: str) -> str:
     """Extract prompt from message, removing mention prefix."""
     return body.split(maxsplit=1)[1] if " " in body else ""
-
-
-async def _get_event_relations(
-    client: Client,
-    room_id: str,
-    event_id: str,
-    rel_type: RelationType | None = None,
-    direction: PaginationDirection = PaginationDirection.BACKWARD,
-    from_token: str | None = None,
-    to_token: str | None = None,
-    limit: int | None = None,
-) -> PaginatedMessages:
-    """Get child events for a given parent event.
-
-    See https://spec.matrix.org/v1.17/client-server-api/#relationships-api
-
-    NOTE: Not yet in mautrix-python (see PR
-    https://github.com/mautrix/python/pull/157)
-
-    Args:
-        client: The Matrix client.
-        room_id: The room containing the parent event.
-        event_id: The parent event ID.
-        rel_type: Filter by relation type (e.g., THREAD).
-        direction: FORWARD for chronological, BACKWARD for reverse.
-            Pagination starts at `from_token` (or most recent if omitted).
-        from_token: Pagination token to start from.
-        to_token: Pagination token to stop at.
-        limit: Maximum number of events to return.
-
-    Returns:
-        PaginatedMessages with events and pagination tokens.
-    """
-    query_params = {
-        "dir": direction.value,
-        "from": from_token,
-        "to": to_token,
-        "limit": str(limit) if limit else None,
-    }
-
-    content = await client.api.request(
-        method=Method.GET,
-        path=(
-            Path.v1.rooms[room_id].relations[event_id][rel_type.value]
-            if rel_type
-            else Path.v1.rooms[room_id].relations[event_id]
-        ),
-        query_params=query_params,  # type: ignore
-        metrics_method="getRelations",
-    )
-
-    try:
-        return PaginatedMessages(  # type: ignore
-            start=content.get("prev_batch"),
-            end=content.get("next_batch"),
-            events=[Event.deserialize(event) for event in content["chunk"]],
-        )
-    except KeyError:
-        raise MatrixResponseError("`chunk` not in response.")
-    except SerializerError as e:
-        raise MatrixResponseError("Invalid events in response") from e
 
 
 class NestorBot:
@@ -270,7 +206,7 @@ class NestorBot:
         self, room_id: str, thread_root_id: str, limit: int = 10
     ) -> list[MessageEvent]:
         """Fetch and decrypt most recent messages from a thread (newest-first)."""
-        response = await _get_event_relations(
+        response = await get_event_relations(
             self.client,
             room_id=room_id,
             event_id=thread_root_id,
