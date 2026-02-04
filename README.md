@@ -1,29 +1,29 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/elatomo/nestor-matrix/main/assets/avatar.png" alt="Néstor bot avatar" width="200">
-  <p><em>Matrix bot for <a href="https://github.com/elatomo/nestor">Néstor</a>, a personal AI assistant 🎩💬</em></p>
 </div>
 
-> [!CAUTION]
-> Personal experiment in progress. Features may appear, disappear, or mutate
-> without warning 🧪
+# Néstor Matrix Bot
+
+A Matrix bot for [Néstor](https://github.com/elatomo/nestor), a personal AI
+assistant.
+
+I run this on my own homeserver to learn about Matrix bots and have a simple
+assistant available in my rooms. You're welcome to use it as reference or fork
+it for your own experiments.
+
+## Features
+
+- Responds to mentions (`!nestor`, `!n`) in rooms or direct messages
+- Threaded conversation memory
+- End-to-end encryption support
 
 ## Quick Start
 
-Néstor Matrix Bot requires Python 3.14 and [uv](https://github.com/astral-sh/uv).
+Requires Python 3.14 and [uv](https://github.com/astral-sh/uv).
 
 ```bash
-# Clone the repository
 git clone https://github.com/elatomo/nestor-matrix.git
 cd nestor-matrix
-
-# Install Python 3.14 (if needed)
-# Option A: via asdf
-asdf install
-
-# Option B: via uv
-uv python install
-
-# Install dependencies
 uv sync
 ```
 
@@ -44,35 +44,28 @@ Run the bot:
 ```bash
 make run
 ```
+## Usage
+
+Invite the bot to a room and mention it:
+
+```
+!nestor what time is it in Tokyo?
+```
+
+Or message it directly (no mention needed in DMs).
+
+## Development
+
+```bash
+make dev      # Install with dev dependencies
+make check    # Run lints, types, tests
+make shell    # Python REPL with project loaded
+```
+
+Run `make help` for all available commands.
 
 ## Deployment
 
 Pushing to `main` triggers automatic deployment via GitHub Actions.
 
 Server setup uses the script in `deploy/setup.sh`.
-
-## Example Session
-
-Run `make shell`, and then:
-
-```python
-import logging
-import asyncio
-
-from nestor_matrix.bot import NestorBot
-
-logging.basicConfig(level=logging.INFO)
-
-bot = NestorBot()
-
-# Start the bot in the background
-task = asyncio.create_task(bot.start())
-
-# Now you can interact with the bot
-await bot.client.whoami()
-await bot.client.get_joined_rooms()
-members = await bot.client.get_members("!room:server.com")
-
-# When done, cancel the task
-task.cancel()
-```
