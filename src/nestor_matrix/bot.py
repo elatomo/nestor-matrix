@@ -1,4 +1,8 @@
-"""Matrix bot main entry point."""
+"""Matrix bot entry point.
+
+Handles connection lifecycle, E2EE via mautrix, and message routing to the
+Néstor AI agent.
+"""
 
 import logging
 
