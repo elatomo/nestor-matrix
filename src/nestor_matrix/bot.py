@@ -151,6 +151,16 @@ class NestorBot:
         ):
             await self.client.join_room(event.room_id)
             logger.info("Joined room %s", event.room_id)
+            await self._send_welcome(event.room_id)
+
+    async def _send_welcome(self, room_id: str) -> None:
+        """Send welcome message."""
+        content = TextMessageEventContent(
+            msgtype=MessageType.NOTICE,
+            body=settings.welcome_message,
+            formatted_body=markdown.render(settings.welcome_message),
+        )
+        await self.client.send_message_event(room_id, EventType.ROOM_MESSAGE, content)
 
     async def _handle_message(self, event: MessageEvent) -> None:
         logger.debug(

@@ -29,6 +29,18 @@ class Settings(BaseSettings):
         default=False, description="Ignore events that happened during downtime"
     )
 
+    # Bot behaviour
+    welcome_message: str = Field(
+        default=(
+            "👋 Hi! I'm Néstor, your assistant.\n\n"
+            "I'm not very bright, but I can help with searches, answer "
+            "questions, and a few other things.\n\n"
+            "Mention me with `!n`, `!nestor`, or my user ID in rooms. In DMs, "
+            "just write ✨"
+        ),
+        description="Welcome message sent when joining a room.",
+    )
+
     # Néstor settings
     nestor_openai_api_key: SecretStr
     nestor_default_model: str = "gpt-4o-mini"
