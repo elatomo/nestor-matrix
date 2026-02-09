@@ -93,6 +93,7 @@ class NestorBot:
         self.agent_deps = AssistantDeps(
             search_backend=settings.nestor_search_backend,
             safesearch=settings.nestor_safesearch,
+            default_location=settings.nestor_default_location,
         )
 
         # Register handlers

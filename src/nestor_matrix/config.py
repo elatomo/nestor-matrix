@@ -52,6 +52,10 @@ class Settings(BaseSettings):
         default="moderate",
         description="Safe search level: 'on', 'moderate', or 'off'",
     )
+    nestor_default_location: str = Field(
+        default="Madrid",
+        description="Default location for weather queries. Location name, city or postal code.",
+    )
 
 
 # Global settings instance
