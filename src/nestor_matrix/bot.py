@@ -52,7 +52,14 @@ def _extract_prompt(body: str) -> str:
 
 
 class NestorBot:
-    """Néstor AI assistant bot with E2EE support."""
+    """Matrix bot with E2EE support for the Néstor AI assistant.
+
+    Use as async context manager:
+
+        async with NestorBot() as bot:
+            await bot.run_forever()  # Daemon mode
+            await bot.send(room, text)  # One-shot
+    """
 
     def __init__(self):
         # Database for crypto + state
@@ -100,10 +107,8 @@ class NestorBot:
         self.client.add_event_handler(EventType.ROOM_MEMBER, self._handle_invite)
         self.client.add_event_handler(EventType.ROOM_MESSAGE, self._handle_message)
 
-    async def start(self):
-        """Start the bot."""
-        logger.info("Starting bot")
-
+    async def __aenter__(self) -> NestorBot:
+        """Initialize resources."""
         logger.debug("Starting database")
         await self.db.start()
 
@@ -122,11 +127,31 @@ class NestorBot:
         logger.info(
             "Connected, I'm %s using device %s", whoami.user_id, whoami.device_id
         )
+        return self
 
-        try:
-            await self.client.start(None)
-        finally:
-            await self._cleanup()
+    async def __aexit__(self, *exc) -> None:
+        """Release resources."""
+        logger.info("Cleaning up")
+        self.client.stop()
+        await self.client.api.session.close()
+        await self.crypto_store.close()
+        await self.db.stop()
+        logger.info("Cleanup complete")
+
+    async def run_forever(self) -> None:
+        """Start sync loop. Blocks until stopped."""
+        logger.info("Starting bot")
+        await self.client.start(None)
+
+    async def send(self, room_id: str, text: str) -> None:
+        """Send markdown message to room."""
+        content = TextMessageEventContent(
+            msgtype=MessageType.TEXT,
+            body=text,
+            format=Format.HTML,
+            formatted_body=markdown.render(text),
+        )
+        await self.client.send_message(room_id, content)
 
     async def _is_direct_message(self, room_id: str) -> bool:
         """Check if room is a DM (exactly 2 members)."""
@@ -299,17 +324,8 @@ class NestorBot:
 
         return self._thread_events_to_history(thread_events)
 
-    async def _cleanup(self) -> None:
-        """Cleanup resources."""
-        logger.info("Cleaning up")
-        self.client.stop()
-        await self.client.api.session.close()
-        await self.crypto_store.close()
-        await self.db.stop()
-        logger.info("Cleanup complete")
-
 
 async def main():
     """Create and start the bot."""
-    bot = NestorBot()
-    await bot.start()
+    async with NestorBot() as bot:
+        await bot.run_forever()
