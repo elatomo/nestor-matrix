@@ -160,5 +160,22 @@ def info():
     click.echo(f"  Device ID: {settings.device_id}")
 
 
+@cli.command()
+@click.argument("prompt")
+@click.option("--room", "-r", required=True, help="Room ID to send message")
+@click.option("--title", "-t", default=None, help="Optional heading for the response")
+def send(prompt: str, room: str, title: str | None):
+    """Send an AI response to a Matrix room (for cron jobs)."""
+    from .bot import NestorBot
+
+    async def _send():
+        async with NestorBot() as bot:
+            result = await bot.agent.run(prompt, deps=bot.agent_deps)
+            text = f"**{title}**\n\n{result.output}" if title else result.output
+            await bot.send(room, text)
+
+    asyncio.run(_send())
+
+
 if __name__ == "__main__":
     cli()
