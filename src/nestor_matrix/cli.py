@@ -174,7 +174,11 @@ def send(prompt: str, room: str, title: str | None):
             text = f"**{title}**\n\n{result.output}" if title else result.output
             await bot.send(room, text)
 
-    asyncio.run(_send())
+    try:
+        asyncio.run(_send())
+    except Exception as e:
+        click.secho(f"✗ Failed: {e}", fg="red", err=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
