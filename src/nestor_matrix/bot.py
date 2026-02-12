@@ -136,7 +136,7 @@ class NestorBot:
         await self.client.api.session.close()
         await self.crypto_store.close()
         await self.db.stop()
-        logger.info("Cleanup complete")
+        logger.debug("Cleanup complete")
 
     async def run_forever(self) -> None:
         """Start sync loop. Blocks until stopped."""
