@@ -176,8 +176,9 @@ def send(prompt: str, room: str, title: str | None):
 
     try:
         asyncio.run(_send())
-    except Exception as e:
-        click.secho(f"✗ Failed: {e}", fg="red", err=True)
+    except Exception:
+        logger.exception("Send command failed")
+        click.secho("✗ Send failed, check logs for details", fg="red", err=True)
         sys.exit(1)
 
 
