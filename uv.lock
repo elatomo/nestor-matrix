@@ -787,7 +787,7 @@ wheels = [
 [[package]]
 name = "nestor"
 version = "0.1.0"
-source = { git = "https://github.com/elatomo/nestor#5e26fd595f89981557be017dc6976f9631e88e6b" }
+source = { git = "https://github.com/elatomo/nestor#93b4174bc06d555f8a6eac3185dd5373e3b7866b" }
 dependencies = [
     { name = "async-lru" },
     { name = "click" },
